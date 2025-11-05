@@ -1,0 +1,344 @@
+#!/bin/bash
+
+# Test script for Spec-Kit with Qwen Code on Ubuntu
+# This script tests the initialization and basic functionality of Spec-Kit with Qwen Code
+
+set -e  # Exit on error
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+# Test configuration
+TEST_PROJECT_NAME="test-qwen-project"
+TEST_DIR="$(pwd)/test-projects"
+PROJECT_PATH="${TEST_DIR}/${TEST_PROJECT_NAME}"
+
+# Function to print colored output
+print_info() {
+    echo -e "${GREEN}[INFO]${NC} $1"
+}
+
+print_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
+
+print_warning() {
+    echo -e "${YELLOW}[WARNING]${NC} $1"
+}
+
+# Function to check prerequisites
+check_prerequisites() {
+    print_info "Checking prerequisites..."
+
+    # Check Python version
+    if command -v python3 &> /dev/null; then
+        PYTHON_VERSION=$(python3 --version 2>&1 | awk '{print $2}')
+        print_info "Python found: $PYTHON_VERSION"
+
+        # Check if Python 3.11+
+        PYTHON_MAJOR=$(echo $PYTHON_VERSION | cut -d. -f1)
+        PYTHON_MINOR=$(echo $PYTHON_VERSION | cut -d. -f2)
+        if [ "$PYTHON_MAJOR" -lt 3 ] || ([ "$PYTHON_MAJOR" -eq 3 ] && [ "$PYTHON_MINOR" -lt 11 ]); then
+            print_error "Python 3.11+ required. Found: $PYTHON_VERSION"
+            exit 1
+        fi
+    else
+        print_error "Python 3 not found. Please install Python 3.11+"
+        exit 1
+    fi
+
+    # Check uv (install if not found)
+    if command -v uv &> /dev/null; then
+        UV_VERSION=$(uv --version 2>&1)
+        print_info "uv found: $UV_VERSION"
+    else
+        print_warning "uv not found. Installing..."
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        export PATH="$HOME/.cargo/bin:$PATH"
+        if command -v uv &> /dev/null; then
+            print_info "uv installed successfully ✓"
+        else
+            print_error "uv installation failed. Please install manually: curl -LsSf https://astral.sh/uv/install.sh | sh"
+            exit 1
+        fi
+    fi
+
+    # Check pip (install if not found)
+    if ! command -v pip &> /dev/null && ! command -v pip3 &> /dev/null; then
+        print_warning "pip not found. Installing..."
+        sudo apt update && sudo apt install -y python3-pip || {
+            print_error "pip installation failed"
+            exit 1
+        }
+        print_info "pip installed successfully ✓"
+    fi
+
+    # Check git
+    if command -v git &> /dev/null; then
+        GIT_VERSION=$(git --version 2>&1)
+        print_info "git found: $GIT_VERSION"
+    else
+        print_error "git not found. Please install git"
+        exit 1
+    fi
+
+    print_info "All prerequisites met ✓"
+}
+
+# Function to install or verify spec-kit
+check_spec_kit() {
+    print_info "Checking Spec-Kit installation..."
+
+    if command -v specify &> /dev/null; then
+        print_info "Spec-Kit CLI found: $(specify --version 2>&1 || echo 'installed')"
+    else
+        print_warning "Spec-Kit CLI not found. Installing..."
+
+        # Ensure PATH includes local bin directories
+        export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
+
+        # Try PyPI installation first (recommended)
+        if command -v pip &> /dev/null; then
+            print_info "Installing specify-cli from PyPI using pip..."
+            pip install --upgrade specify-cli
+        elif command -v pip3 &> /dev/null; then
+            print_info "Installing specify-cli from PyPI using pip3..."
+            pip3 install --upgrade --user specify-cli
+        elif command -v uv &> /dev/null; then
+            print_info "Installing specify-cli from PyPI using uv..."
+            uv pip install specify-cli
+        else
+            # Fallback to GitHub installation
+            print_info "Installing specify-cli from GitHub..."
+            if ! command -v uv &> /dev/null; then
+                print_error "uv not found. Cannot install from GitHub."
+                exit 1
+            fi
+            uv tool install specify-cli --from git+https://github.com/github/spec-kit.git
+        fi
+
+        # Verify installation
+        export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
+        if command -v specify &> /dev/null; then
+            print_info "Spec-Kit installed successfully ✓"
+        else
+            print_error "Spec-Kit installation failed. Please install manually."
+            print_info "Try: pip install specify-cli"
+            exit 1
+        fi
+    fi
+}
+
+# Function to install or verify Qwen Code
+check_qwen_code() {
+    print_info "Checking Qwen Code installation..."
+
+    # Qwen Code might be available as a CLI tool or through different means
+    # Check for common Qwen Code CLI commands
+    if command -v qwen-code &> /dev/null || command -v qwen &> /dev/null || command -v qwencli &> /dev/null; then
+        print_info "Qwen Code CLI found: $(qwen-code --version 2>&1 || qwen --version 2>&1 || qwencli --version 2>&1 || echo 'installed')"
+    else
+        print_warning "Qwen Code CLI not found. Attempting to install..."
+
+        # Ensure PATH includes local bin directories
+        export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
+
+        # Try PyPI installation first
+        if command -v pip &> /dev/null; then
+            print_info "Attempting to install Qwen Code from PyPI using pip..."
+            pip install --upgrade qwen-code qwen-coder qwencli 2>/dev/null || print_warning "Qwen Code PyPI package may not be available"
+        elif command -v pip3 &> /dev/null; then
+            print_info "Attempting to install Qwen Code from PyPI using pip3..."
+            pip3 install --upgrade --user qwen-code qwen-coder qwencli 2>/dev/null || print_warning "Qwen Code PyPI package may not be available"
+        elif command -v uv &> /dev/null; then
+            print_info "Attempting to install Qwen Code from PyPI using uv..."
+            uv pip install qwen-code qwen-coder qwencli 2>/dev/null || print_warning "Qwen Code PyPI package may not be available"
+        fi
+
+        # Try npm installation (if available)
+        if command -v npm &> /dev/null; then
+            print_info "Attempting to install Qwen Code via npm..."
+            npm install -g @qwenlm/qwen-code @qwenlm/qwencli 2>/dev/null || print_warning "Qwen Code npm package may not be available"
+        fi
+
+        # Try installing from GitHub (if available)
+        if command -v git &> /dev/null && command -v pip &> /dev/null; then
+            print_info "Attempting to install Qwen Code from GitHub..."
+            TEMP_DIR=$(mktemp -d)
+            cd "$TEMP_DIR"
+
+            # Try common Qwen Code repositories
+            for repo in "QwenLM/Qwen-Code" "QwenLM/qwen-code" "QwenLM/QwenCLI"; do
+                print_info "Trying repository: $repo"
+                git clone --depth 1 "https://github.com/$repo.git" . 2>/dev/null && {
+                    if [ -f "requirements.txt" ]; then
+                        pip install -r requirements.txt
+                    fi
+                    if [ -f "setup.py" ]; then
+                        pip install -e . || pip install .
+                    fi
+                    if [ -f "pyproject.toml" ]; then
+                        pip install -e . || pip install .
+                    fi
+                    break
+                } || true
+            done
+
+            cd - > /dev/null
+            rm -rf "$TEMP_DIR"
+        fi
+
+        # Verify installation
+        export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
+        if command -v qwen-code &> /dev/null || command -v qwen &> /dev/null || command -v qwencli &> /dev/null; then
+            print_info "Qwen Code installed successfully ✓"
+        else
+            print_warning "Qwen Code CLI not found after installation attempts."
+            print_info "Note: Qwen Code may be used through Spec-Kit without a separate CLI installation."
+            print_info "The test will proceed - Spec-Kit can work with Qwen Code via API or editor integration."
+        fi
+    fi
+}
+
+# Function to cleanup test project
+cleanup() {
+    print_info "Cleaning up test project..."
+    if [ -d "$PROJECT_PATH" ]; then
+        rm -rf "$PROJECT_PATH"
+        print_info "Test project removed: $PROJECT_PATH"
+    fi
+}
+
+# Function to verify project structure
+verify_project_structure() {
+    print_info "Verifying project structure..."
+
+    local errors=0
+
+    # Check if project directory exists
+    if [ ! -d "$PROJECT_PATH" ]; then
+        print_error "Project directory not found: $PROJECT_PATH"
+        return 1
+    fi
+
+    # Check for .specify directory
+    if [ ! -d "$PROJECT_PATH/.specify" ]; then
+        print_error ".specify directory not found"
+        errors=$((errors + 1))
+    else
+        print_info ".specify directory exists ✓"
+    fi
+
+    # Check for scripts directory
+    if [ ! -d "$PROJECT_PATH/.specify/scripts" ]; then
+        print_error ".specify/scripts directory not found"
+        errors=$((errors + 1))
+    else
+        print_info ".specify/scripts directory exists ✓"
+
+        # Check for bash scripts
+        if [ ! -d "$PROJECT_PATH/.specify/scripts/bash" ]; then
+            print_error ".specify/scripts/bash directory not found"
+            errors=$((errors + 1))
+        else
+            print_info ".specify/scripts/bash directory exists ✓"
+        fi
+    fi
+
+    # Check for templates directory
+    if [ ! -d "$PROJECT_PATH/.specify/templates" ]; then
+        print_error ".specify/templates directory not found"
+        errors=$((errors + 1))
+    else
+        print_info ".specify/templates directory exists ✓"
+    fi
+
+    # Check for memory directory
+    if [ ! -d "$PROJECT_PATH/.specify/memory" ]; then
+        print_error ".specify/memory directory not found"
+        errors=$((errors + 1))
+    else
+        print_info ".specify/memory directory exists ✓"
+    fi
+
+    # Check for Git initialization
+    if [ ! -d "$PROJECT_PATH/.git" ]; then
+        print_warning ".git directory not found (may be expected if --no-git was used)"
+    else
+        print_info "Git repository initialized ✓"
+    fi
+
+    # Check for README or other project files
+    if [ -f "$PROJECT_PATH/README.md" ]; then
+        print_info "README.md found ✓"
+    fi
+
+    if [ $errors -eq 0 ]; then
+        print_info "Project structure verification passed ✓"
+        return 0
+    else
+        print_error "Project structure verification failed with $errors errors"
+        return 1
+    fi
+}
+
+# Main test function
+run_test() {
+    print_info "=========================================="
+    print_info "Testing Spec-Kit with Qwen Code"
+    print_info "=========================================="
+
+    # Create test directory
+    mkdir -p "$TEST_DIR"
+
+    # Cleanup any existing test project
+    cleanup
+
+    # Check prerequisites
+    check_prerequisites
+
+    # Check/install spec-kit
+    check_spec_kit
+
+    # Check/install Qwen Code
+    check_qwen_code
+
+    # Run test
+    print_info "Initializing test project with Qwen Code..."
+    cd "$TEST_DIR"
+
+    # Ensure PATH includes local bin directories
+    export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
+
+    if specify init "$TEST_PROJECT_NAME" --ai qwen; then
+        print_info "Project initialization successful ✓"
+    else
+        print_error "Project initialization failed"
+        exit 1
+    fi
+
+    # Verify project structure
+    if verify_project_structure; then
+        print_info "All tests passed ✓"
+    else
+        print_error "Tests failed"
+        exit 1
+    fi
+
+    # List project contents for verification
+    print_info "Project contents:"
+    ls -la "$PROJECT_PATH" | head -20
+
+    print_info "=========================================="
+    print_info "Test completed successfully!"
+    print_info "=========================================="
+}
+
+# Run cleanup on exit
+trap cleanup EXIT
+
+# Run the test
+run_test

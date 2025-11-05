@@ -6,39 +6,110 @@ This document provides usage examples for using [GitHub's Spec-Kit](https://gith
 
 Spec-Kit is GitHub's official toolkit that revolutionizes AI programming by addressing the "vibe-coding crisis". Instead of relying on random, ambiguous prompts that force AI to guess your requirements, Spec-Kit provides a structured, specification-driven approach that transforms unstable "what" into executable specifications, ensuring AI generates exactly what you need rather than generic solutions.
 
-## Why Spec-Kit Solves the "Vibe-Coding Crisis"
+## Architecture
 
-GitHub identified critical problems with traditional AI programming approaches:
+Spec-Kit operates through a sophisticated template and script system:
 
-1. **Randomness in vibe-coding**: Vague prompts like "add photo sharing to my app" force AI to make assumptions, many of which are inevitably wrong
-2. **Intent communication failure**: LLMs excel at pattern completion but can't read minds - without clear specifications, they generate generic solutions
-3. **Complex system integration challenges**: Adding features to existing codebases without architectural constraints results in "plugin-like" additions rather than native components
-4. **Missing quality standards**: Team security policies, compliance rules, and design constraints often exist only in people's heads or buried in unsearchable documentation
+### File Structure Created
+```
+.specify/
+├── scripts/
+│   ├── bash/           # Linux/macOS scripts
+│   └── ps/             # PowerShell scripts
+├── templates/
+│   ├── spec-template.md
+│   ├── plan-template.md
+│   └── constitution.md
+├── memory/             # Context and state management
+└── feature-branches/   # Automatic branch management
+```
 
-Spec-Kit transforms these pain points into structured, executable specifications that serve as the single source of truth for your development process.
-
-## Prerequisites
-
-Before using Spec-Kit with any AI assistant, ensure you have:
-
-- **Linux/macOS/Windows** system
-- **Python 3.11+**
-- **[uv](https://docs.astral.sh/uv/)** for package management
-- **Git**
-- **One of the supported AI coding assistants**: Claude Code, GitHub Copilot, Cursor, Gemini CLI, and others
+### Command Processing Pipeline
+1. **Template Loading**: Each command loads corresponding Markdown templates
+2. **Placeholder Resolution**: `[ALL_CAPS_IDENTIFIER]` placeholders filled with context
+3. **Script Execution**: Bash/PowerShell scripts handle Git operations and file management
+4. **Content Generation**: AI fills templates with structured, consistent content
+5. **Version Control**: Automatic semantic versioning and branch management
 
 ## Installation
 
-Install Spec-Kit using one of these methods:
+The test scripts in this directory automatically install all prerequisites and Spec-Kit when needed. Simply run:
 
-### Persistent Installation (Recommended)
 ```bash
-uv tool install specify-cli --from git+https://github.com/github/spec-kit.git
+# Test with Claude Code (auto-installs everything)
+./test-claude.sh
+
+# Test with Codex CLI (auto-installs everything)
+./test-codex.sh
+
+# Test with Qwen Code (auto-installs everything)
+./test-qwen.sh
 ```
 
-### One-time Usage
+The test scripts will automatically:
+- Install `uv` package manager if not found
+- Install `pip` if not found
+- Install `specify-cli` from PyPI (preferred) or GitHub (fallback)
+- Install the corresponding AI assistant (Claude Code, Codex CLI, or Qwen Code) if not found
+- Set up proper PATH configuration
+- Verify all installations
+
+## Quick Start Guide
+
+### 1. Install Spec-Kit
+
+#### Option A: Automatic Installation (Recommended for Testing)
+
+Run the test scripts - they automatically install everything:
+
 ```bash
+# Test with Claude Code (auto-installs prerequisites, Spec-Kit, and Claude Code)
+./test-claude.sh
+
+# Or test with other AI assistants (auto-installs everything)
+./test-codex.sh  # Auto-installs Codex CLI
+./test-qwen.sh    # Auto-installs Qwen Code
+```
+
+The test scripts automatically install:
+- All prerequisites (`uv`, `pip`)
+- Spec-Kit (`specify-cli`)
+- The corresponding AI assistant (Claude Code, Codex CLI, or Qwen Code)
+
+#### Option B: Manual Installation
+
+Install Spec-Kit manually:
+
+```bash
+# PyPI installation (recommended)
+pip install specify-cli
+
+# Or using uv
+uv pip install specify-cli
+
+# Alternative: Install from GitHub
+uv tool install specify-cli --from git+https://github.com/github/spec-kit.git
+
+# One-time usage without installation
 uvx --from git+https://github.com/github/spec-kit.git specify init <PROJECT_NAME>
+```
+
+### 2. Initialize Project
+```bash
+specify init my-taskify-app --ai claude
+```
+
+### 3. Follow the Workflow
+Open your project in your chosen AI assistant and execute the slash commands in sequence:
+
+```
+/speckit.constitution   # Define project principles (optional)
+/speckit.specify       # Describe what to build
+/speckit.clarify       # Clarify requirements (optional)
+/speckit.plan          # Define technical approach
+/speckit.analyze       # Quality check (optional)
+/speckit.tasks         # Generate task breakdown
+/speckit.implement     # Execute implementation
 ```
 
 ## Supported AI Assistants
@@ -381,59 +452,115 @@ Individual small-scale utility projects where process overhead outweighs develop
 - **📚 Living Documentation**: Specifications serve as always-current project documentation
 - **🤝 Cross-AI Compatibility**: Same workflow across Claude, Copilot, Cursor, and other AI assistants
 
-## Quick Start Guide
+## Testing Spec-Kit
 
-### 1. Install Spec-Kit
+This directory contains test scripts for verifying Spec-Kit functionality with different AI coding assistants on Ubuntu. The test scripts **automatically install all prerequisites** when needed.
+
+### Test Scripts
+
+#### Individual Test Scripts
+
+- **`test-claude.sh`** - Tests Spec-Kit initialization and structure with Claude Code
+- **`test-codex.sh`** - Tests Spec-Kit initialization and structure with Codex CLI
+- **`test-qwen.sh`** - Tests Spec-Kit initialization and structure with Qwen Code
+
+### Automatic Installation
+
+The test scripts automatically handle installation of all prerequisites:
+
+- ✅ **Python 3.11+** - Checks version and exits if not met (manual installation required)
+- ✅ **uv** package manager - Automatically installs if not found
+- ✅ **pip** - Automatically installs if not found
+- ✅ **Git** - Checks availability (manual installation required if not found)
+- ✅ **specify-cli** - Automatically installs from PyPI or GitHub
+- ✅ **AI Assistant** - Automatically installs the corresponding AI assistant:
+  - `test-claude.sh` attempts to install Claude Code (via PyPI, npm, or GitHub)
+  - `test-codex.sh` attempts to install Codex CLI (via PyPI, npm, or GitHub)
+  - `test-qwen.sh` attempts to install Qwen Code (via PyPI, npm, or GitHub)
+- ✅ **PATH configuration** - Automatically sets up PATH for installed tools
+
+### Running Tests
+
 ```bash
-# Persistent installation (recommended)
-uv tool install specify-cli --from git+https://github.com/github/spec-kit.git
+# Test with Claude Code
+./test-claude.sh
 
-# One-time usage
-uvx --from git+https://github.com/github/spec-kit.git specify init <PROJECT_NAME>
+# Test with Codex CLI
+./test-codex.sh
+
+# Test with Qwen Code
+./test-qwen.sh
 ```
 
-### 2. Initialize Project
+### Test Projects
+
+Test projects are created in a `test-projects/` directory relative to where the scripts are run. These projects are automatically cleaned up after each test.
+
+### Exit Codes
+
+- **0** - All tests passed
+- **1** - Test failed or prerequisites not met
+
+### Test Troubleshooting
+
+#### "Python 3.11+ required"
+The test scripts **cannot** automatically install Python. You must install it manually:
 ```bash
-specify init my-taskify-app --ai claude
+sudo apt update
+sudo apt install python3.11 python3.11-venv python3.11-dev
 ```
 
-### 3. Follow the Workflow
-Open your project in your chosen AI assistant and execute the slash commands in sequence:
-
-```
-/speckit.constitution   # Define project principles (optional)
-/speckit.specify       # Describe what to build
-/speckit.clarify       # Clarify requirements (optional)
-/speckit.plan          # Define technical approach
-/speckit.analyze       # Quality check (optional)
-/speckit.tasks         # Generate task breakdown
-/speckit.implement     # Execute implementation
+#### "uv not found"
+**Note:** The test scripts automatically install `uv` if not found. If you see this error, it means the automatic installation failed. Install manually:
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+export PATH="$HOME/.cargo/bin:$PATH"
 ```
 
-## Technical Architecture
-
-Spec-Kit operates through a sophisticated template and script system:
-
-### File Structure Created
-```
-.specify/
-├── scripts/
-│   ├── bash/           # Linux/macOS scripts
-│   └── ps/             # PowerShell scripts
-├── templates/
-│   ├── spec-template.md
-│   ├── plan-template.md
-│   └── constitution.md
-├── memory/             # Context and state management
-└── feature-branches/   # Automatic branch management
+#### "pip not found"
+**Note:** The test scripts automatically install `pip` if not found. If you see this error, it means the automatic installation failed. Install manually:
+```bash
+sudo apt update
+sudo apt install python3-pip
 ```
 
-### Command Processing Pipeline
-1. **Template Loading**: Each command loads corresponding Markdown templates
-2. **Placeholder Resolution**: `[ALL_CAPS_IDENTIFIER]` placeholders filled with context
-3. **Script Execution**: Bash/PowerShell scripts handle Git operations and file management
-4. **Content Generation**: AI fills templates with structured, consistent content
-5. **Version Control**: Automatic semantic versioning and branch management
+#### "git not found"
+The test scripts **cannot** automatically install Git. You must install it manually:
+```bash
+sudo apt update
+sudo apt install git
+```
+
+#### "Spec-Kit installation failed"
+If automatic installation fails, try manual installation:
+```bash
+pip install specify-cli
+# or
+uv pip install specify-cli
+```
+
+#### "AI Assistant installation failed"
+If the AI assistant (Claude Code, Codex CLI, or Qwen Code) installation fails, this is usually not critical:
+- Many AI assistants work through editor integrations (VS Code, Cursor) rather than CLI tools
+- Spec-Kit can work with AI assistants even if a CLI tool is not installed
+- The test will proceed and verify Spec-Kit functionality
+- For manual installation:
+  - **Claude Code**: Install via Cursor editor (https://cursor.sh) or VS Code extension
+  - **Codex CLI**: Install OpenAI CLI: `pip install openai`
+  - **Qwen Code**: Check Qwen documentation: https://github.com/QwenLM
+
+#### Permission Denied
+Make scripts executable:
+```bash
+chmod +x test-claude.sh test-codex.sh test-qwen.sh
+```
+
+#### PATH Issues
+If `specify` command is not found after installation, ensure your PATH includes:
+```bash
+export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
+# Add to ~/.bashrc or ~/.zshrc for persistence
+```
 
 ## Getting Help
 
