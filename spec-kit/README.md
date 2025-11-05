@@ -441,7 +441,3 @@ Spec-Kit operates through a sophisticated template and script system:
 - **Project Documentation**: [Spec-Kit GitHub](https://github.com/github/spec-kit) (43.7k+ stars)
 - **Report issues**: [GitHub Issues](https://github.com/github/spec-kit/issues)
 - **Methodology deep-dive**: [Spec-Driven Development Guide](https://github.com/github/spec-kit/blob/main/spec-driven.md)
-
----
-
-*Spec-Kit represents GitHub's vision for the future of AI programming: moving from unpredictable "vibe coding" to systematic, specification-driven development that delivers consistent, high-quality results across all supported AI assistants.*
