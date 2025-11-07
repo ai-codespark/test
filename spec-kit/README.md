@@ -501,7 +501,26 @@ The test scripts automatically handle installation of all prerequisites:
 
 ### Test Projects
 
-Test projects are created in a `test-projects/` directory relative to where the scripts are run. These projects are automatically cleaned up after each test.
+Test projects are created in a `test-projects/` directory relative to where the scripts are run.
+
+#### Interactive Cleanup Mode
+
+After a successful test run, the scripts will prompt you to decide whether to keep or remove the test project:
+
+```
+[INFO] ==========================================
+[INFO] Test completed successfully!
+[INFO] ==========================================
+
+[INFO] Test project location: /path/to/test-projects/test-claude-project
+
+Do you want to keep the test project? (y/n) [default: n]:
+```
+
+- **Press 'y'** to keep the test project for inspection
+- **Press 'n' or Enter** to remove the test project automatically
+
+This allows you to inspect the generated project structure and files before deciding to keep or remove it. If the test fails, the project is kept for troubleshooting purposes.
 
 ### Exit Codes
 

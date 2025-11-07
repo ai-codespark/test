@@ -224,6 +224,22 @@ cleanup() {
     fi
 }
 
+# Function to prompt user about keeping or removing test project
+prompt_cleanup() {
+    if [ -d "$PROJECT_PATH" ]; then
+        echo ""
+        print_info "Test project location: $PROJECT_PATH"
+        echo ""
+        read -p "Do you want to keep the test project? (y/n) [default: n]: " -n 1 -r
+        echo ""
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            cleanup
+        else
+            print_info "Test project kept at: $PROJECT_PATH"
+        fi
+    fi
+}
+
 # Function to verify project structure
 verify_project_structure() {
     print_info "Verifying project structure..."
@@ -347,10 +363,10 @@ run_test() {
     print_info "=========================================="
     print_info "Test completed successfully!"
     print_info "=========================================="
-}
 
-# Run cleanup on exit
-trap cleanup EXIT
+    # Prompt user about keeping or removing test project
+    prompt_cleanup
+}
 
 # Run the test
 run_test
