@@ -287,6 +287,42 @@ specify init my-service --ai codex
 
 All supported AI assistants follow the same structured workflow and command patterns, ensuring consistency across different development environments.
 
+## Advanced Configuration Options
+
+### PowerShell Support (Windows)
+```bash
+specify init my-project --ai claude --script ps
+```
+
+### Initialize in Current Directory
+```bash
+specify init . --ai claude
+# or
+specify init --here --ai claude
+```
+
+### Skip Git Initialization
+```bash
+specify init my-project --ai claude --no-git
+```
+
+### Debug Mode
+```bash
+specify init my-project --ai claude --debug
+```
+
+## Environment Variables
+
+Set `SPECIFY_FEATURE` when working outside Git repositories:
+```bash
+export SPECIFY_FEATURE=001-user-authentication
+```
+
+For Windows PowerShell:
+```powershell
+$env:SPECIFY_FEATURE = "001-user-authentication"
+```
+
 ## The Complete Spec-Kit Workflow
 
 Spec-Kit implements a rigorous 4-stage workflow with optional quality assurance steps. Each stage has specific responsibilities and must be fully validated before proceeding to the next.
@@ -364,60 +400,6 @@ Spec-Kit implements a rigorous 4-stage workflow with optional quality assurance 
 - Custom validation criteria based on project requirements
 - Ensures adherence to established principles and standards
 
-## Real-World Performance Comparison
-
-### Traditional Development Workflow:
-- **Product Requirements Document:** 2-3 hours
-- **Design Documentation:** 2-3 hours
-- **Project Structure Setup:** 30 minutes
-- **Technical Specification:** 3-4 hours
-- **Test Planning:** 2 hours
-- **Total:** ~12 hours
-
-### Spec-Kit Workflow:
-- **Specify:** 5 minutes (with natural language)
-- **Plan:** 5 minutes (with technical constraints)
-- **Tasks:** 5 minutes (auto-generated)
-- **Total:** ~15 minutes
-
-**Result:** Complete specifications, implementation plans, API contracts, data models, and test scenarios - all properly version-controlled in feature branches.
-
-## Advanced Configuration Options
-
-### PowerShell Support (Windows)
-```bash
-specify init my-project --ai claude --script ps
-```
-
-### Initialize in Current Directory
-```bash
-specify init . --ai claude
-# or
-specify init --here --ai claude
-```
-
-### Skip Git Initialization
-```bash
-specify init my-project --ai claude --no-git
-```
-
-### Debug Mode
-```bash
-specify init my-project --ai claude --debug
-```
-
-## Environment Variables
-
-Set `SPECIFY_FEATURE` when working outside Git repositories:
-```bash
-export SPECIFY_FEATURE=001-user-authentication
-```
-
-For Windows PowerShell:
-```powershell
-$env:SPECIFY_FEATURE = "001-user-authentication"
-```
-
 ## When to Use Spec-Kit
 
 ### ✅ Ideal Scenarios
@@ -458,6 +440,24 @@ Individual small-scale utility projects where process overhead outweighs develop
 - **🔄 Iterative Enhancement**: Supports both greenfield and brownfield development
 - **📚 Living Documentation**: Specifications serve as always-current project documentation
 - **🤝 Cross-AI Compatibility**: Same workflow across Claude, Copilot, Cursor, and other AI assistants
+
+## Real-World Performance Comparison
+
+### Traditional Development Workflow:
+- **Product Requirements Document:** 2-3 hours
+- **Design Documentation:** 2-3 hours
+- **Project Structure Setup:** 30 minutes
+- **Technical Specification:** 3-4 hours
+- **Test Planning:** 2 hours
+- **Total:** ~12 hours
+
+### Spec-Kit Workflow:
+- **Specify:** 5 minutes (with natural language)
+- **Plan:** 5 minutes (with technical constraints)
+- **Tasks:** 5 minutes (auto-generated)
+- **Total:** ~15 minutes
+
+**Result:** Complete specifications, implementation plans, API contracts, data models, and test scenarios - all properly version-controlled in feature branches.
 
 ## Testing Spec-Kit
 
