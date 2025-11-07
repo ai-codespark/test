@@ -93,31 +93,37 @@ check_spec_kit() {
     print_info "Checking Spec-Kit installation..."
 
     if command -v specify &> /dev/null; then
-        print_info "Spec-Kit CLI found: $(specify --version 2>&1 || echo 'installed')"
+        print_info "Spec-Kit CLI found: installed"
     else
         print_warning "Spec-Kit CLI not found. Installing..."
 
         # Ensure PATH includes local bin directories
         export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
 
-        # Try PyPI installation first (recommended)
-        if command -v pip &> /dev/null; then
-            print_info "Installing specify-cli from PyPI using pip..."
-            pip install --upgrade specify-cli
-        elif command -v pip3 &> /dev/null; then
-            print_info "Installing specify-cli from PyPI using pip3..."
-            pip3 install --upgrade --user specify-cli
-        elif command -v uv &> /dev/null; then
-            print_info "Installing specify-cli from PyPI using uv..."
-            uv pip install specify-cli
-        else
-            # Fallback to GitHub installation
-            print_info "Installing specify-cli from GitHub..."
-            if ! command -v uv &> /dev/null; then
-                print_error "uv not found. Cannot install from GitHub."
-                exit 1
-            fi
-            uv tool install specify-cli --from git+https://github.com/github/spec-kit.git
+        # Try pipx first (best for CLI tools, handles externally-managed environments)
+        if command -v pipx &> /dev/null; then
+            print_info "Installing specify-cli from PyPI using pipx..."
+            pipx install specify-cli || {
+                print_warning "pipx installation failed, trying alternative methods..."
+            }
+        fi
+
+        # Try uv tool install (uv's way to install CLI tools)
+        if ! command -v specify &> /dev/null && command -v uv &> /dev/null; then
+            print_info "Installing specify-cli from PyPI using uv tool install..."
+            uv tool install specify-cli || {
+                print_warning "uv tool install failed, trying alternative methods..."
+            }
+        fi
+
+        # Fallback to uv pip install in a virtual environment
+        if ! command -v specify &> /dev/null && command -v uv &> /dev/null; then
+            print_info "Installing specify-cli from PyPI using uv pip install..."
+            TEMP_VENV=$(mktemp -d)
+            uv pip install --system specify-cli || {
+                print_warning "uv pip install failed..."
+            }
+            rm -rf "$TEMP_VENV"
         fi
 
         # Verify installation
@@ -126,7 +132,9 @@ check_spec_kit() {
             print_info "Spec-Kit installed successfully ✓"
         else
             print_error "Spec-Kit installation failed. Please install manually."
-            print_info "Try: pip install specify-cli"
+            print_info "Try one of these methods:"
+            print_info "  1. pipx install specify-cli  (recommended for CLI tools)"
+            print_info "  2. uv tool install specify-cli"
             exit 1
         fi
     fi

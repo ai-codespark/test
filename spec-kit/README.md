@@ -49,10 +49,12 @@ The test scripts in this directory automatically install all prerequisites and S
 The test scripts will automatically:
 - Install `uv` package manager if not found
 - Install `pip` if not found
-- Install `specify-cli` from PyPI (preferred) or GitHub (fallback)
+- Install `specify-cli` from PyPI using multiple methods (handles externally-managed environments):
+  - Try `pipx` first (recommended for CLI tools)
+  - Fall back to `uv tool install` (works on externally-managed environments)
 - Install the corresponding AI assistant (Claude Code, Codex CLI, or Qwen Code) if not found
 - Set up proper PATH configuration
-- Verify all installations
+- Verify all installations with graceful error handling (no "command not found" or "No such option" errors)
 
 ## Quick Start Guide
 
@@ -78,13 +80,16 @@ The test scripts automatically install:
 
 #### Option B: Manual Installation
 
-Install Spec-Kit manually:
+Install Spec-Kit manually (handles externally-managed environments):
 
 ```bash
-# PyPI installation (recommended)
-pip install specify-cli
+# Method 1: Using pipx (recommended for CLI tools, handles externally-managed environments)
+pipx install specify-cli
 
-# Or using uv
+# Method 2: Using uv tool install (works on externally-managed environments)
+uv tool install specify-cli
+
+# Method 3: Using uv pip install
 uv pip install specify-cli
 
 # Alternative: Install from GitHub
@@ -93,6 +98,8 @@ uv tool install specify-cli --from git+https://github.com/github/spec-kit.git
 # One-time usage without installation
 uvx --from git+https://github.com/github/spec-kit.git specify init <PROJECT_NAME>
 ```
+
+**Note:** On newer Ubuntu/Debian systems with externally-managed Python environments, use `pipx` or `uv tool install` to avoid permission errors. The `pip install --user` method may still fail on some systems.
 
 ### 2. Initialize Project
 ```bash
@@ -531,16 +538,25 @@ sudo apt update
 sudo apt install git
 ```
 
-#### "Spec-Kit installation failed"
-If automatic installation fails, try manual installation:
+#### "Spec-Kit installation failed" or "externally-managed-environment" error
+If automatic installation fails (especially on newer Ubuntu/Debian systems), try manual installation with one of these methods:
+
 ```bash
-pip install specify-cli
-# or
+# Method 1: Using pipx (recommended for CLI tools, handles externally-managed environments)
+pipx install specify-cli
+
+# Method 2: Using uv tool install (works on externally-managed environments)
+uv tool install specify-cli
+
+# Method 3: Using uv pip install
 uv pip install specify-cli
 ```
 
-#### "AI Assistant installation failed"
-If the AI assistant (Claude Code, Codex CLI, or Qwen Code) installation fails, this is usually not critical:
+**Note:** The `externally-managed-environment` error occurs on newer Python installations. Use `pipx` or `uv tool install` to install CLI tools without modifying system Python. The `pip install --user` method may still fail on some systems.
+
+#### "AI Assistant installation failed" or "command not found" warnings
+If the AI assistant (Claude Code, Codex CLI, or Qwen Code) installation fails or CLI tools are not found, this is usually not critical:
+- The test scripts now handle missing CLI tools gracefully without error messages
 - Many AI assistants work through editor integrations (VS Code, Cursor) rather than CLI tools
 - Spec-Kit can work with AI assistants even if a CLI tool is not installed
 - The test will proceed and verify Spec-Kit functionality
@@ -548,6 +564,8 @@ If the AI assistant (Claude Code, Codex CLI, or Qwen Code) installation fails, t
   - **Claude Code**: Install via Cursor editor (https://cursor.sh) or VS Code extension
   - **Codex CLI**: Install OpenAI CLI: `pip install openai`
   - **Qwen Code**: Check Qwen documentation: https://github.com/QwenLM
+
+**Note:** The test scripts have been updated to check for AI assistant CLI tools individually and only attempt version checks on tools that actually exist, preventing "command not found" errors.
 
 #### Permission Denied
 Make scripts executable:
