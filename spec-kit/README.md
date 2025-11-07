@@ -8,8 +8,6 @@ Spec-Kit is GitHub's official toolkit that revolutionizes AI programming by addr
 
 ## Architecture
 
-Spec-Kit operates through a sophisticated template and script system:
-
 ### File Structure Created
 ```
 .specify/
